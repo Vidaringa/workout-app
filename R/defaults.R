@@ -45,6 +45,7 @@ default_settings <- function() {
     "riegel_exponent",      "1.06",               "Riegel race-time exponent",
     "session_load_km",      "8",                  "Combined load: one lifting session counts as this many run km",
     "load_spike_ratio",     "1.3",                "Flag weeks whose load exceeds this x the previous 4-week average",
+    "garmin_sync_days",     "90",                 "Garmin import (intervals.icu): how many days back the first sync looks",
     "timezone",             "Atlantic/Reykjavik", "Time zone for dates",
     "bodyweight_kg",        "",                   "Current bodyweight (optional)",
     "constraints",          "3 lifting sessions a week, max 60 min each (45 preferred). Avoids heavy squats because of the leg load from deadlifts and running.", "Shared with the AI review",

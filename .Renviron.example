@@ -15,3 +15,8 @@ APP_PASSWORD_HASH=
 
 # Weekly review (Review tab)
 ANTHROPIC_API_KEY=
+
+# Garmin runs via intervals.icu (optional; leave empty for manual run logging).
+# Key: intervals.icu → Settings → Developer Settings. Athlete ID 0 = your own.
+INTERVALS_API_KEY=
+INTERVALS_ATHLETE_ID=0

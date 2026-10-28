@@ -74,6 +74,10 @@ mod_running_ui <- function(id) {
     class = "screen",
     shiny::actionButton(ns("log_run"), "Log a run", icon = shiny::icon("person-running"),
                         class = "btn-primary btn-lg w-100"),
+    if (garmin_enabled()) {
+      shiny::actionButton(ns("garmin_sync"), "Sync runs from Garmin", icon = shiny::icon("rotate"),
+                          class = "btn-outline-primary w-100 mt-2")
+    },
     shiny::h3(class = "section-title", "Race predictions"),
     shiny::uiOutput(ns("predictions")),
     shiny::h3(class = "section-title", "Weekly distance"),
@@ -97,6 +101,28 @@ mod_running_ui <- function(id) {
 mod_running_server <- function(id, store) {
   shiny::moduleServer(id, function(input, output, session) {
     run_logger(input, session, store, "log_run")
+
+    # Garmin: sync once when the app opens (quietly unless something was added
+    # or it failed), and again on the button.
+    sync_garmin <- function(quiet) {
+      added <- tryCatch(
+        garmin_sync(shiny::isolate(store$runs()), shiny::isolate(store$settings()), shiny::isolate(store$today())),
+        error = function(e) {
+          shiny::showNotification(paste("Garmin sync failed:", conditionMessage(e)), type = "warning",
+                                  duration = 8, session = session)
+          NA
+        }
+      )
+      if (is.na(added)) return()
+      if (added > 0) store$touch("runs")
+      if (added > 0 || !quiet) {
+        shiny::showNotification(sprintf("%d new run(s) from Garmin.", added), type = "message", session = session)
+      }
+    }
+    if (garmin_enabled()) {
+      session$onFlushed(\() sync_garmin(quiet = TRUE), once = TRUE)
+      shiny::observeEvent(input$garmin_sync, sync_garmin(quiet = FALSE))
+    }
 
     weekly <- shiny::reactive({
       runs <- store$runs_m()

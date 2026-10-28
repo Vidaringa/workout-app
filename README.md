@@ -22,7 +22,7 @@ renv::restore()            # installs the locked package versions
 renv::install("testthat")  # only needed to run the tests
 ```
 
-Copy `.Renviron.example` to `.Renviron` and fill it in (sections 2–4 below),
+Copy `.Renviron.example` to `.Renviron` and fill it in (sections 2–5 below),
 then restart R and run:
 
 ```r
@@ -115,7 +115,30 @@ skips the gate.
 API's server-side refusal fallback (`fallbacks: "default"`), so a rare
 safety-classifier refusal is retried on another model instead of failing.
 
-## 5. Deploy to Posit Connect Cloud
+## 5. Garmin runs (optional)
+
+Runs recorded on the watch can come in automatically through
+[intervals.icu](https://intervals.icu), a free training site that syncs with
+Garmin Connect and has a personal API key. (Garmin's own API is only for
+approved businesses, and Strava's API terms don't allow its data in AI tools,
+which the Review tab is.)
+
+1. Create an intervals.icu account and connect Garmin under *Settings →
+   Connections*. Connect Garmin directly, not through Strava: activities that
+   come from Strava aren't available through the API.
+2. Under *Settings → Developer Settings*, create an API key and put it in
+   `INTERVALS_API_KEY`. Leave `INTERVALS_ATHLETE_ID=0` (your own account).
+3. Restart the app. The Run tab gets a **Sync runs from Garmin** button, and the
+   app syncs once every time it opens.
+
+The first sync looks back `garmin_sync_days` (90) days; later syncs start a few
+days before the last imported run. Runs, trail runs and treadmill runs are
+imported (trail runs as `trail`, the rest as `road`) with distance, moving time,
+ascent, average HR, RPE and the activity description as notes. Each run keeps
+its intervals.icu id in `external_id`, so nothing is imported twice. If you also
+log the same run by hand, delete one of the two rows in the `runs` tab.
+
+## 6. Deploy to Posit Connect Cloud
 
 Connect Cloud's free plan deploys from a **public** GitHub repo, so the code
 is public. Your data isn't: it lives in the Sheet, which only the service
@@ -137,11 +160,11 @@ current free-plan limits on [connect.posit.cloud/plans](https://connect.posit.cl
    `app.R` as the primary file.
 4. In the content's settings, add these variables and mark them secret:
    `GSHEET_ID`, `GOOGLE_SA_JSON` (paste the whole key JSON as the value),
-   `APP_PASSWORD_SALT`, `APP_PASSWORD_HASH`, `ANTHROPIC_API_KEY`.
-   Don't set `APP_AUTH` there.
+   `APP_PASSWORD_SALT`, `APP_PASSWORD_HASH`, `ANTHROPIC_API_KEY`, and, for
+   Garmin, `INTERVALS_API_KEY`. Don't set `APP_AUTH` there.
 5. Open the URL on your phone and add it to the home screen.
 
-## 6. Day-to-day
+## 7. Day-to-day
 
 **Start a new round.** On Plan, press **Finish round → generate next round**.
 The dialog shows each lift's current TM, its e1RM and the proposed new TM with
@@ -189,7 +212,7 @@ never changes history. Round 1–3's old split stays as it was logged.
 and reps. Once every set reached the top of the rep range, it offers
 "+`accessory_increment` kg" (2.5) as a one-tap button.
 
-## 7. How the numbers are computed
+## 8. How the numbers are computed
 
 - **e1RM**: Epley, `kg × (1 + reps / 30)` (a single counts as itself), using
   only sets of ≤ `e1rm_max_reps` (10) reps. When RIR is logged, reps + RIR is
@@ -214,13 +237,14 @@ and reps. Once every set reached the top of the rep range, it offers
   A week is flagged when it's above `load_spike_ratio` (1.3) × the previous
   4-week average.
 
-## 8. Code layout
+## 9. Code layout
 
 ```
 app.R                 page, bottom navigation, password gate, modules
 R/db.R                the only file that talks to storage (db_read_* / db_write_*)
 R/engine_*.R          round generation, progression, e1RM trend, running, Today pre-fill
 R/parse_actuals.R     parser for the workbook's free-text actuals
+R/garmin.R            Garmin runs via the intervals.icu API
 R/review_summary.R    the JSON summary and the Claude call (ellmer)
 R/mod_*.R             one Shiny module per tab
 www/                  CSS and the JS for steppers, RIR chips and the rest timer
@@ -235,6 +259,6 @@ Nothing else reads or writes data.
 Columns added beyond the original brief:
 
 - `sets`: `lift`, `planned_reps_max`, `date_estimated`
-- `runs`: `run_id`, `source`, `external_id`, `logged_at` (ready for a later
-  Garmin import)
+- `runs`: `run_id`, `source` (`manual` or `garmin`), `external_id` (the
+  intervals.icu activity id), `logged_at`
 - `settings`: `description`
