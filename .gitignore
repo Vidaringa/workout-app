@@ -1,0 +1,11 @@
+.Rproj.user/
+.Rhistory
+.RData
+.Renviron
+# Google service-account key and any other credentials
+secrets/
+*service-account*.json
+# Your training data stays out of the (public) repo
+data/
+*.xlsx
+rsconnect/

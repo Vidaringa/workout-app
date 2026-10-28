@@ -1,0 +1,17 @@
+# Copy to .Renviron (git-ignored) and fill in. Restart R after editing.
+
+# Google Sheet used as the database (the long ID in the Sheet's URL)
+GSHEET_ID=
+
+# Service-account key: a file path, or the JSON itself on one line
+GOOGLE_SA_JSON=secrets/service-account.json
+
+# Password gate. Generate the hash with:
+#   source("R/auth.R"); password_hash("<your password>", "<your salt>")
+APP_PASSWORD_SALT=
+APP_PASSWORD_HASH=
+# Uncomment to skip the password locally (never on the hosted app)
+# APP_AUTH=off
+
+# Weekly review (Review tab)
+ANTHROPIC_API_KEY=
